@@ -1,5 +1,7 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Client } from "pg";
+import * as schema from '../schema';
+import { logger } from ".";
 
 class Database {
     private static instance: Database;
@@ -7,7 +9,7 @@ class Database {
     private db: ReturnType<typeof drizzle> | undefined;
 
     private constructor() {
-        const connectionString = process.env.POSTGRES_URI;
+        const connectionString = process.env.DATABASE_URL;
         if (!connectionString) {
             throw new Error("POSTGRES_URI environment variable is not defined");
         }
@@ -27,8 +29,11 @@ class Database {
     private async connect() {
         try {
             await this.client.connect();
-            this.db = drizzle(this.client);
-            console.log("PostgresDB Connected!");
+            this.db = drizzle(this.client, {
+                schema,
+                logger,
+            });
+            console.log("PostgresDB Connected! 🦋");
         } catch (err) {
             console.error(`Error: ${(err as Error).message}`);
             throw err;
